@@ -6,21 +6,16 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.media.MediaPlayer
-import android.media.RingtoneManager
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 
 class AlarmService : Service() {
-    private var mediaPlayer: MediaPlayer? = null
+    private var mp: MediaPlayer? = null
 
     companion object {
         private const val CHANNEL_ID = "ALARM_SERVICE_CHANNEL"
         private const val NOTIFICATION_ID = 1
-    }
-
-    override fun onBind(intent: Intent?): IBinder? {
-        return null
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -37,7 +32,7 @@ class AlarmService : Service() {
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Alarm Ringing")
             .setContentText("Tap to open app and dismiss alarm")
-            .setSmallIcon(R.drawable.ic_alarm)
+            .setSmallIcon(R.mipmap.ic_launcher)
             .setContentIntent(pendingIntent)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
@@ -45,28 +40,13 @@ class AlarmService : Service() {
 
         startForeground(NOTIFICATION_ID, notification)
 
-        if (mediaPlayer == null) {
-            try {
-                mediaPlayer = MediaPlayer.create(this, R.raw.alarm)
-                mediaPlayer?.isLooping = true
-            } catch (e: Exception) {
-                e.printStackTrace()
+        if (intent != null) {
+            if (mp == null) {
+                mp = MediaPlayer.create(this, R.raw.alarm)
+                mp?.isLooping = true
             }
-
-            if (mediaPlayer == null) {
-                val alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-                    ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
-                    ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-                try {
-                    mediaPlayer = MediaPlayer.create(this, alarmUri)
-                    mediaPlayer?.isLooping = true
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            }
+            mp?.start()
         }
-        mediaPlayer?.start()
-
         return START_STICKY
     }
 
@@ -84,14 +64,18 @@ class AlarmService : Service() {
 
     override fun onDestroy() {
         try {
-            if (mediaPlayer?.isPlaying == true) {
-                mediaPlayer?.stop()
+            if (mp?.isPlaying == true) {
+                mp?.stop()
             }
-            mediaPlayer?.release()
+            mp?.release()
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        mediaPlayer = null
+        mp = null
         super.onDestroy()
+    }
+
+    override fun onBind(intent: Intent): IBinder? {
+        return null
     }
 }

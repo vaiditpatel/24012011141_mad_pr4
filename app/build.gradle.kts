@@ -4,9 +4,7 @@ plugins {
 
 android {
     namespace = "com.example.a24012011141_mad_pr4"
-    compileSdk {
-        version = release(37)
-    }
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.example.a24012011141_mad_pr4"

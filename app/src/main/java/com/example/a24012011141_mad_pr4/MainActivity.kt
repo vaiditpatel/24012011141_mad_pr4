@@ -4,123 +4,120 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.app.TimePickerDialog
 import android.content.Intent
+import android.icu.text.SimpleDateFormat
+import android.icu.util.Calendar
 import android.os.Build
 import android.os.Bundle
 import android.view.View
-import android.widget.Button
-import android.widget.LinearLayout
+import android.widget.TextClock
 import android.widget.TextView
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.isVisible
-import java.text.SimpleDateFormat
-import java.util.Calendar
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.card.MaterialCardView
 import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
-
-    private lateinit var layoutCreateAlarm: LinearLayout
-    private lateinit var layoutCancelAlarm: LinearLayout
-    private lateinit var tvAlarmTime: TextView
-    private lateinit var btnAction: Button
+    lateinit var textAlarm: TextView
+    lateinit var cardSetAlarm: MaterialCardView
+    lateinit var alarmTimeValue: TextView
+    var pendingIntent: PendingIntent? = null
+    lateinit var alarmManager: AlarmManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setContentView(R.layout.activity_main)
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 101)
-            }
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
         }
 
-        layoutCreateAlarm = findViewById(R.id.layout_create_alarm)
-        layoutCancelAlarm = findViewById(R.id.layout_cancel_alarm)
-        tvAlarmTime = findViewById(R.id.tv_alarm_time)
-        btnAction = findViewById(R.id.btn_action)
+        textAlarm = findViewById<TextClock>(R.id.textView4)
+        cardSetAlarm = findViewById(R.id.card_list)
+        alarmTimeValue = findViewById(R.id.alarmTimeValue)
+        cardSetAlarm.visibility = View.GONE
+        alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
 
-        btnAction.setOnClickListener {
-            if (layoutCreateAlarm.isVisible) {
-                showTimerDialog()
-            } else {
-                cancelAlarm()
-            }
+        findViewById<MaterialButton>(R.id.btnSetAlarm).setOnClickListener {
+            checkExactAlarmPermission()
+            showTimedialog()
+        }
+        findViewById<MaterialButton>(R.id.btnCancelAlarm).setOnClickListener {
+            cancelAlarm()
         }
     }
 
-    private fun showTimerDialog() {
-        val calendar = Calendar.getInstance()
-        val hour = calendar.get(Calendar.HOUR_OF_DAY)
-        val minute = calendar.get(Calendar.MINUTE)
-
-        val timePickerDialog = TimePickerDialog(
+    private fun showTimedialog() {
+        val cldr: Calendar = Calendar.getInstance()
+        val h: Int = cldr.get(Calendar.HOUR_OF_DAY)
+        val m: Int = cldr.get(Calendar.MINUTE)
+        val picker = TimePickerDialog(
             this,
-            { _, selectedHour, selectedMinute ->
-                val alarmCalendar = Calendar.getInstance()
-                alarmCalendar.set(Calendar.HOUR_OF_DAY, selectedHour)
-                alarmCalendar.set(Calendar.MINUTE, selectedMinute)
-                alarmCalendar.set(Calendar.SECOND, 0)
-
-                if (alarmCalendar.before(Calendar.getInstance())) {
-                    alarmCalendar.add(Calendar.DATE, 1)
-                }
-
-                setAlarm(alarmCalendar.timeInMillis)
-
-                val sdf = SimpleDateFormat("hh:mm:ss a MMM, dd yyyy", Locale.getDefault())
-                tvAlarmTime.text = sdf.format(alarmCalendar.time)
-
-                layoutCreateAlarm.visibility = View.GONE
-                layoutCancelAlarm.visibility = View.VISIBLE
-                btnAction.text = "Cancel Alarm"
-            },
-            hour,
-            minute,
+            { _, sHour, sMinute -> sendDialogDataToActivity(sHour, sMinute) },
+            h,
+            m,
             false,
         )
-        timePickerDialog.show()
+        picker.show()
     }
 
-    private fun setAlarm(millis: Long) {
+    private fun checkExactAlarmPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (!alarmManager.canScheduleExactAlarms()) {
+                val intent = Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                startActivity(intent)
+            }
+        }
+    }
+
+    private fun sendDialogDataToActivity(hour: Int, minute: Int) {
+        val calendar = java.util.Calendar.getInstance()
+        calendar.set(Calendar.HOUR_OF_DAY, hour)
+        calendar.set(Calendar.MINUTE, minute)
+        calendar.set(Calendar.SECOND, 0)
+
+        if (calendar.before(java.util.Calendar.getInstance())) {
+            calendar.add(java.util.Calendar.DATE, 1)
+        }
+
+        cardSetAlarm.visibility = View.VISIBLE
+        val sdf = SimpleDateFormat("hh:mm:ss a", Locale.getDefault())
+        alarmTimeValue.text = sdf.format(calendar.time)
+
         val intent = Intent(this, AlarmBroadcastReceiver::class.java)
-        intent.putExtra("ALARM_KEY", "START")
-        
-        val pendingIntent = PendingIntent.getBroadcast(
-            this, 
-            0, 
-            intent, 
+        intent.putExtra(AlarmBroadcastReceiver.SERVICE_KEY, AlarmBroadcastReceiver.START_VAL)
+
+        pendingIntent = PendingIntent.getBroadcast(
+            this,
+            0,
+            intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 
-        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
-        
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (alarmManager.canScheduleExactAlarms()) {
-                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, millis, pendingIntent)
+        pendingIntent?.let {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                if (alarmManager.canScheduleExactAlarms()) {
+                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, it)
+                } else {
+                    alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, it)
+                }
             } else {
-                alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, millis, pendingIntent)
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, it)
             }
-        } else {
-            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, millis, pendingIntent)
         }
     }
 
     private fun cancelAlarm() {
         val intent = Intent(this, AlarmBroadcastReceiver::class.java)
-        intent.putExtra("ALARM_KEY", "STOP")
+        intent.putExtra(AlarmBroadcastReceiver.SERVICE_KEY, AlarmBroadcastReceiver.STOP_VAL)
         sendBroadcast(intent)
 
-        val alarmIntent = Intent(this, AlarmBroadcastReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
-            this, 
-            0, 
-            alarmIntent, 
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-        )
-        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
-        alarmManager.cancel(pendingIntent)
-
-        layoutCreateAlarm.visibility = View.VISIBLE
-        layoutCancelAlarm.visibility = View.GONE
-        btnAction.text = "Create Alarm"
+        pendingIntent?.let { alarmManager.cancel(it) }
+        cardSetAlarm.visibility = View.GONE
+        alarmTimeValue.text = "--:-- --"
     }
 }

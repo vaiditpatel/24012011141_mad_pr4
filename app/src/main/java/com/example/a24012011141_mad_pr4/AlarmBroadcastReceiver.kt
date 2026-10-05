@@ -6,18 +6,25 @@ import android.content.Intent
 import android.os.Build
 
 class AlarmBroadcastReceiver : BroadcastReceiver() {
+
+    companion object {
+        const val SERVICE_KEY = "Service1"
+        const val START_VAL = "start"
+        const val STOP_VAL = "stop"
+    }
+
     override fun onReceive(context: Context, intent: Intent) {
-        val key = intent.getStringExtra("ALARM_KEY")
-        
-        val serviceIntent = Intent(context, AlarmService::class.java)
-        
-        if (key == "STOP") {
-            context.stopService(serviceIntent)
-        } else {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(serviceIntent)
+        val str1 = intent.getStringExtra(SERVICE_KEY)
+        if (str1 == START_VAL || str1 == STOP_VAL) {
+            val intentService = Intent(context, AlarmService::class.java)
+            if (str1 == START_VAL) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(intentService)
+                } else {
+                    context.startService(intentService)
+                }
             } else {
-                context.startService(serviceIntent)
+                context.stopService(intentService)
             }
         }
     }
