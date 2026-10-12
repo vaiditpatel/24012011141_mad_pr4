@@ -1,6 +1,13 @@
 # Android Alarm Application
 
 A robust Android Alarm Clock application built using core Android background processing components. This project demonstrates how to schedule precise alarms, handle background audio playback, and build a modern user interface using Material Design.
+### Screenshots
+
+- ![Screenshot 1](1.png)
+- ![Screenshot 2](2.png)
+- ![Screenshot 3](3.png)
+- ![Screenshot 4](4.png)
+- 
 
 ## 🚀 Features
 
