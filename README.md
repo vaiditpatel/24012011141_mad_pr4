@@ -1,21 +1,23 @@
 # Android Alarm Application
 
 A robust Android Alarm Clock application built using core Android background processing components. This project demonstrates how to schedule precise alarms, handle background audio playback, and build a modern user interface using Material Design.
+
 ### Screenshots
 
-- ![Screenshot 1](1.png)
-- ![Screenshot 2](2.png)
-- ![Screenshot 3](3.png)
-- ![Screenshot 4](4.png)
-- 
+<div align="center">
+  <img src="1.png" alt="Screenshot 1" width="250" />
+  <img src="2.png" alt="Screenshot 2" width="250" />
+  <img src="3.png" alt="Screenshot 3" width="250" />
+  <img src="4.png" alt="Screenshot 4" width="250" />
+</div>
 
 ## 🚀 Features
 
-* **Real-time Clock Display:** Live time tracking using the `TextClock` widget.
-* **Interactive Time Selection:** Intuitive time picking using `TimePickerDialog`.
-* **Precise Alarm Scheduling:** Reliable alarm triggering using `AlarmManager` and exact alarm permissions.
-* **Background Audio Playback:** Seamless alarm ringtone playback managed via an Android `Service` and `MediaPlayer`.
-* **Modern UI:** Clean, card-based interface built with `MaterialCardView`.
+- **Real-time Clock Display:** Live time tracking using the `TextClock` widget.
+- **Interactive Time Selection:** Intuitive time picking using `TimePickerDialog`.
+- **Precise Alarm Scheduling:** Reliable alarm triggering using `AlarmManager` and exact alarm permissions.
+- **Background Audio Playback:** Seamless alarm ringtone playback managed via an Android `Service` and `MediaPlayer`.
+- **Modern UI:** Clean, card-based interface built with `MaterialCardView`.
 
 ## 🏗️ Architecture & Core Components
 
@@ -29,12 +31,12 @@ This application relies on three primary components to ensure the alarm triggers
 
 This project serves as a comprehensive study of the following Android concepts and classes:
 
-* **Background Processing:** `Service`, `BroadcastReceiver`, `startService()`, `stopService()`
-* **System Services:** `AlarmManager`, `getSystemService()`, `sendBroadcast()`
-* **Intents & Data Passing:** `PendingIntent`, `Intent.putExtra()`, `Intent.getStringExtra()`
-* **Time & Date Management:** `Calendar`, `SimpleDateFormat`, `TimePickerDialog`
-* **Media:** `MediaPlayer`
-* **UI Components:** `TextClock`, `MaterialCardView`
+- **Background Processing:** `Service`, `BroadcastReceiver`, `startService()`, `stopService()`
+- **System Services:** `AlarmManager`, `getSystemService()`, `sendBroadcast()`
+- **Intents & Data Passing:** `PendingIntent`, `Intent.putExtra()`, `Intent.getStringExtra()`
+- **Time & Date Management:** `Calendar`, `SimpleDateFormat`, `TimePickerDialog`
+- **Media:** `MediaPlayer`
+- **UI Components:** `TextClock`, `MaterialCardView`
 
 ## ⚙️ Prerequisites & Permissions
 
@@ -44,18 +46,3 @@ To ensure the `AlarmManager` can fire at the exact specified time on Android 12 
 Ensure the following permission is declared in your `AndroidManifest.xml`:
 ```xml
 <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-```
-
-*Note: You must also register both `AlarmBroadcastReceiver` and `AlarmService` within the `<application>` tag of your manifest.*
-
-## 💻 Setup Instructions
-
-1. **Clone or Download** the repository to your local machine.
-2. Open **Android Studio**.
-3. Select **Open an existing Android Studio project** and navigate to the downloaded folder.
-4. Allow Gradle to sync and build the project.
-5. Run the application on an emulator or physical device.
-
----
-
-> **Developer Note:** When testing exact alarms on physical devices running Android 12+, ensure that the user grants the exact alarm permission in the device's system settings if prompted, as the OS may restrict this by default to save battery.
